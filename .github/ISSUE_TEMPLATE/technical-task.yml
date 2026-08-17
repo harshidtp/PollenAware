@@ -1,0 +1,17 @@
+name: Technical Task
+description: Technical development task
+title: "[TASK] "
+labels: ["technical"]
+
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria

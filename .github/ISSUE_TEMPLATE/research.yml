@@ -1,0 +1,17 @@
+name: Research
+description: Research or investigation
+title: "[RESEARCH] "
+labels: ["research"]
+
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Research Question
+    validations:
+      required: true
+
+  - type: textarea
+    id: findings
+    attributes:
+      label: Findings
