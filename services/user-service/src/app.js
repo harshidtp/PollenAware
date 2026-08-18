@@ -1,15 +1,31 @@
+const userRoutes = require("./routes/userRoutes");
 const express = require("express");
 require("dotenv").config();
+
+const pool = require("./config/database");
 
 const app = express();
 
 app.use(express.json());
+app.use("/users", userRoutes);
+app.get("/health", async (req, res) => {
+  try {
+    await pool.query("SELECT 1");
 
-app.get("/health", (req, res) => {
-  res.status(200).json({
-    service: "user-service",
-    status: "healthy"
-  });
+    res.status(200).json({
+      service: "user-service",
+      status: "healthy",
+      database: "connected"
+    });
+  } catch (error) {
+    console.error("DATABASE ERROR:", error);
+
+    res.status(500).json({
+      service: "user-service",
+      status: "unhealthy",
+      database: "disconnected"
+    });
+  }
 });
 
 const PORT = process.env.PORT || 3001;
