@@ -1,0 +1,16 @@
+services:
+  postgres-user:
+    image: postgres:17
+    container_name: pollenaware-user-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pollenaware_users
+      POSTGRES_USER: pollenaware
+      POSTGRES_PASSWORD: pollenaware_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - user_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  user_postgres_data:

@@ -26,7 +26,24 @@ const getUserById = async (id) => {
 
   return result.rows[0];
 };
+const updateUser = async (id, { name, email, location }) => {
+  const query = `
+    UPDATE users
+    SET name = $1,
+        email = $2,
+        location = $3
+    WHERE id = $4
+    RETURNING id, name, email, location, created_at
+  `;
+
+  const values = [name, email, location, id];
+
+  const result = await pool.query(query, values);
+
+  return result.rows[0];
+};
 module.exports = {
   createUser,
   getUserById,
+  updateUser,
 };

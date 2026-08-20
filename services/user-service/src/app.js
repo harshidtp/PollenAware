@@ -1,5 +1,7 @@
 const userRoutes = require("./routes/userRoutes");
 const express = require("express");
+const preferencesRoutes = require("./routes/preferencesRoutes");
+const allergyRoutes = require("./routes/allergyRoutes");
 require("dotenv").config();
 
 const pool = require("./config/database");
@@ -7,7 +9,11 @@ const pool = require("./config/database");
 const app = express();
 
 app.use(express.json());
+
 app.use("/users", userRoutes);
+app.use("/users", allergyRoutes);
+app.use("/users", preferencesRoutes);
+
 app.get("/health", async (req, res) => {
   try {
     await pool.query("SELECT 1");
