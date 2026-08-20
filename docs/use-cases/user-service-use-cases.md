@@ -77,3 +77,16 @@ A user profile is created and stored.
 2. User Service validates the information.
 3. Preferences are stored.
 4. Confirmation is returned.
+
+## System Sequence Diagrams
+
+The User Service system sequence diagrams define the interactions
+between the User and User Service for the following use cases:
+
+- SSD-01 — Create User Profile
+- SSD-02 — View User Profile
+- SSD-03 — Update User Profile
+- SSD-04 — Manage Allergy Profile
+- SSD-05 — Manage User Preferences
+
+The diagrams are stored in the `diagrams` directory.
