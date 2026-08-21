@@ -21,5 +21,18 @@ services:
       RABBITMQ_DEFAULT_USER: pollenaware
       RABBITMQ_DEFAULT_PASS: pollenaware
 
+  postgres-auth:
+    image: postgres:17
+    container_name: pollenaware-auth-db
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: pollenaware_auth
+      POSTGRES_USER: pollenaware
+      POSTGRES_PASSWORD: pollenaware_dev
+    volumes:
+      - auth_postgres_data:/var/lib/postgresql/data
+
 volumes:
   user_postgres_data:
+  auth_postgres_data:
