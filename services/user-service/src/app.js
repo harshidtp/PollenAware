@@ -2,6 +2,7 @@ const userRoutes = require("./routes/userRoutes");
 const express = require("express");
 const preferencesRoutes = require("./routes/preferencesRoutes");
 const allergyRoutes = require("./routes/allergyRoutes");
+const { connectRabbitMQ } = require("./config/rabbitmq");
 require("dotenv").config();
 
 const pool = require("./config/database");
@@ -36,6 +37,17 @@ app.get("/health", async (req, res) => {
 
 const PORT = process.env.PORT || 3001;
 
-app.listen(PORT, () => {
-  console.log(`User Service running on port ${PORT}`);
-});
+const startServer = async () => {
+  try {
+    await connectRabbitMQ();
+
+    app.listen(PORT, () => {
+      console.log(`User Service running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start User Service:", error.message);
+    process.exit(1);
+  }
+};
+
+startServer();

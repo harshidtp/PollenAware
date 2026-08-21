@@ -1,5 +1,5 @@
 const allergyService = require("../services/allergyService");
-
+const { publishEvent } = require("../config/rabbitmq");
 const updateAllergyProfile = async (req, res) => {
   try {
     const { allergies } = req.body;
@@ -15,6 +15,12 @@ const updateAllergyProfile = async (req, res) => {
         req.params.id,
         allergies
       );
+      await publishEvent("allergy.profile.updated", {
+  event: "AllergyProfileUpdated",
+  userId: req.params.id,
+  allergies,
+  updatedAt: allergyProfile.updated_at,
+});
 
     res.status(200).json(allergyProfile);
   } catch (error) {
