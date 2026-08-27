@@ -32,7 +32,18 @@ services:
       POSTGRES_PASSWORD: pollenaware_dev
     volumes:
       - auth_postgres_data:/var/lib/postgresql/data
-
+  postgres-environmental:
+    image: postgres:17
+    container_name: pollenaware-environmental-db
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: pollenaware_environmental
+      POSTGRES_USER: pollenaware
+      POSTGRES_PASSWORD: pollenaware_dev
+    volumes:
+      - environmental_postgres_data:/var/lib/postgresql/data
 volumes:
   user_postgres_data:
   auth_postgres_data:
+  environmental_postgres_data:
