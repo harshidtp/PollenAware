@@ -7,19 +7,9 @@ services:
     environment:
       POSTGRES_DB: pollenaware_users
       POSTGRES_USER: pollenaware
-      POSTGRES_PASSWORD: YOUR_PASSWORD
+      POSTGRES_PASSWORD: pollenaware_dev
     volumes:
       - user_postgres_data:/var/lib/postgresql/data
-
-  rabbitmq:
-    image: rabbitmq:4-management
-    container_name: pollenaware-rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: pollenaware
-      RABBITMQ_DEFAULT_PASS: pollenaware
 
   postgres-auth:
     image: postgres:17
@@ -56,6 +46,88 @@ services:
       POSTGRES_PASSWORD: pollenaware_dev
     volumes:
       - risk_postgres_data:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: pollenaware-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: pollenaware
+      RABBITMQ_DEFAULT_PASS: pollenaware
+
+  auth-service:
+    build:
+      context: ./services/auth-service
+    container_name: pollenaware-auth-service
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      DB_HOST: postgres-auth
+      DB_PORT: 5432
+      DB_NAME: pollenaware_auth
+      DB_USER: pollenaware
+      DB_PASSWORD: pollenaware_dev
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      - postgres-auth
+
+  user-service:
+    build:
+      context: ./services/user-service
+    container_name: pollenaware-user-service
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      DATABASE_URL: postgresql://pollenaware:pollenaware_dev@postgres-user:5432/pollenaware_users
+      RABBITMQ_URL: amqp://pollenaware:pollenaware@rabbitmq:5672
+    depends_on:
+      - postgres-user
+      - rabbitmq
+
+  environmental-service:
+    build:
+      context: ./services/environmental-service
+    container_name: pollenaware-environmental-service
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: 3003
+      DB_HOST: postgres-environmental
+      DB_PORT: 5432
+      DB_NAME: pollenaware_environmental
+      DB_USER: pollenaware
+      DB_PASSWORD: pollenaware_dev
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      RABBITMQ_URL: amqp://pollenaware:pollenaware@rabbitmq:5672
+    depends_on:
+      - postgres-environmental
+      - rabbitmq
+
+  risk-assessment-service:
+    build:
+      context: ./services/risk-assessment-service
+    container_name: pollenaware-risk-assessment-service
+    ports:
+      - "3004:3004"
+    environment:
+      PORT: 3004
+      DB_HOST: postgres-risk
+      DB_PORT: 5432
+      DB_NAME: pollenaware_risk
+      DB_USER: pollenaware
+      DB_PASSWORD: pollenaware_dev
+      RABBITMQ_URL: amqp://pollenaware:pollenaware@rabbitmq:5672
+      USER_SERVICE_URL: http://user-service:3001
+      ENVIRONMENTAL_SERVICE_URL: http://environmental-service:3003
+    depends_on:
+      - postgres-risk
+      - rabbitmq
+      - user-service
+      - environmental-service
 
 volumes:
   user_postgres_data:
