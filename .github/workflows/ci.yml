@@ -1,18 +1,18 @@
-name: Risk Assessment CI
+name: PollenAware CI
 
 on:
   push:
     branches:
-      - main
-      - develop
-      - feature/risk-assessment
+      - "**"
+
   pull_request:
     branches:
-      - main
       - develop
+      - main
 
 jobs:
-  test-risk-assessment:
+  risk-assessment-tests:
+    name: Risk Assessment Tests
     runs-on: ubuntu-latest
 
     defaults:
