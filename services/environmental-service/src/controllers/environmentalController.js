@@ -123,9 +123,9 @@ const getExternalEnvironmentalData = async (req, res) => {
     res.status(200).json(data);
   } catch (error) {
     console.error(
-      "External environmental API error:",
-      error.response?.data || error.message
-    );
+  "External environmental API error:",
+  error
+);
 
     res.status(500).json({
       message: "Failed to retrieve external environmental data",

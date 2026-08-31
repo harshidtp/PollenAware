@@ -16,6 +16,19 @@ const updateAllergyProfile = async (userId, allergies) => {
   return result.rows[0];
 };
 
+const getAllergyProfile = async (userId) => {
+  const query = `
+    SELECT id, user_id, allergies, updated_at
+    FROM allergy_profiles
+    WHERE user_id = $1
+  `;
+
+  const result = await pool.query(query, [userId]);
+
+  return result.rows[0] || null;
+};
+
 module.exports = {
   updateAllergyProfile,
+  getAllergyProfile,
 };
