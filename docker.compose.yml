@@ -104,8 +104,10 @@ services:
       DATABASE_URL: postgresql://pollenaware:pollenaware_dev@postgres-user:5432/pollenaware_users
       RABBITMQ_URL: amqp://pollenaware:pollenaware@rabbitmq:5672
     depends_on:
-      - postgres-user
-      - rabbitmq
+      postgres-user:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
 
   environmental-service:
     build:
@@ -123,8 +125,10 @@ services:
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
       RABBITMQ_URL: amqp://pollenaware:pollenaware@rabbitmq:5672
     depends_on:
-      - postgres-environmental
-      - rabbitmq
+      postgres-environmental:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
 
   notification-service:
     build:
@@ -166,10 +170,14 @@ services:
       USER_SERVICE_URL: http://user-service:3001
       ENVIRONMENTAL_SERVICE_URL: http://environmental-service:3003
     depends_on:
-      - postgres-risk
-      - rabbitmq
-      - user-service
-      - environmental-service
+      postgres-risk:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      environmental-service:
+        condition: service_started
 
 volumes:
   user_postgres_data:
