@@ -36,6 +36,24 @@ const updatePreferences = async (
   return result.rows[0];
 };
 
+const getPreferences = async (userId) => {
+  const query = `
+    SELECT
+      id,
+      user_id,
+      notifications_enabled,
+      preferred_location,
+      updated_at
+    FROM user_preferences
+    WHERE user_id = $1;
+  `;
+
+  const result = await pool.query(query, [userId]);
+
+  return result.rows[0];
+};
+
 module.exports = {
   updatePreferences,
+  getPreferences,
 };

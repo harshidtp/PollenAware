@@ -47,6 +47,19 @@ services:
     volumes:
       - risk_postgres_data:/var/lib/postgresql/data
 
+  postgres-notification:
+    image: postgres:17
+    container_name: pollenaware-notification-db
+    ports:
+      - "5436:5432"
+    environment:
+      POSTGRES_DB: pollenaware_notifications
+      POSTGRES_USER: pollenaware
+      POSTGRES_PASSWORD: pollenaware_dev
+    volumes:
+      - notification_postgres_data:/var/lib/postgresql/data
+      - ./services/notification-service/src/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
   rabbitmq:
     image: rabbitmq:4-management
     container_name: pollenaware-rabbitmq
@@ -56,6 +69,12 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: pollenaware
       RABBITMQ_DEFAULT_PASS: pollenaware
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   auth-service:
     build:
@@ -85,8 +104,10 @@ services:
       DATABASE_URL: postgresql://pollenaware:pollenaware_dev@postgres-user:5432/pollenaware_users
       RABBITMQ_URL: amqp://pollenaware:pollenaware@rabbitmq:5672
     depends_on:
-      - postgres-user
-      - rabbitmq
+      postgres-user:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
 
   environmental-service:
     build:
@@ -104,8 +125,33 @@ services:
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
       RABBITMQ_URL: amqp://pollenaware:pollenaware@rabbitmq:5672
     depends_on:
-      - postgres-environmental
-      - rabbitmq
+      postgres-environmental:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+
+  notification-service:
+    build:
+      context: ./services/notification-service
+    container_name: pollenaware-notification-service
+    ports:
+      - "3005:3005"
+    environment:
+      PORT: 3005
+      DB_HOST: postgres-notification
+      DB_PORT: 5432
+      DB_NAME: pollenaware_notifications
+      DB_USER: pollenaware
+      DB_PASSWORD: pollenaware_dev
+      RABBITMQ_URL: amqp://pollenaware:pollenaware@rabbitmq:5672
+      USER_SERVICE_URL: http://user-service:3001
+    depends_on:
+      postgres-notification:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      user-service:
+        condition: service_started
 
   risk-assessment-service:
     build:
@@ -124,13 +170,18 @@ services:
       USER_SERVICE_URL: http://user-service:3001
       ENVIRONMENTAL_SERVICE_URL: http://environmental-service:3003
     depends_on:
-      - postgres-risk
-      - rabbitmq
-      - user-service
-      - environmental-service
+      postgres-risk:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      environmental-service:
+        condition: service_started
 
 volumes:
   user_postgres_data:
   auth_postgres_data:
   environmental_postgres_data:
   risk_postgres_data:
+  notification_postgres_data:

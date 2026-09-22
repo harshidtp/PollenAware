@@ -5,6 +5,11 @@ jest.mock("../src/repositories/riskAssessmentRepository", () => ({
   getRiskAssessmentsByUser: jest.fn(),
 }));
 
+jest.mock("../src/messaging/rabbitmq", () => ({
+  getChannel: jest.fn(),
+  EXCHANGE_NAME: "pollenaware.events",
+}));
+
 const axios = require("axios");
 
 const riskAssessmentRepository = require(
@@ -12,13 +17,24 @@ const riskAssessmentRepository = require(
 );
 
 const {
+  getChannel,
+  EXCHANGE_NAME,
+} = require("../src/messaging/rabbitmq");
+
+const {
   createRiskAssessment,
   getRiskAssessmentsByUser,
 } = require("../src/services/riskAssessmentService");
 
 describe("riskAssessmentService", () => {
+  const mockPublish = jest.fn();
+
   beforeEach(() => {
     jest.clearAllMocks();
+
+    getChannel.mockReturnValue({
+      publish: mockPublish,
+    });
   });
 
   test("creates a risk assessment using user allergies and environmental data", async () => {
@@ -47,6 +63,7 @@ describe("riskAssessmentService", () => {
       grass_pollen_level: 1,
       tree_pollen_level: null,
       weed_pollen_level: 1,
+      calculated_at: "2026-09-05T10:00:00.000Z",
     };
 
     riskAssessmentRepository.createRiskAssessment
@@ -73,6 +90,30 @@ describe("riskAssessmentService", () => {
       grassPollenLevel: 1,
       treePollenLevel: null,
       weedPollenLevel: 1,
+    });
+
+    expect(mockPublish).toHaveBeenCalledTimes(1);
+
+    const [exchange, routingKey, message, options] =
+      mockPublish.mock.calls[0];
+
+    expect(exchange).toBe(EXCHANGE_NAME);
+    expect(routingKey).toBe("RiskAssessmentCreated");
+
+    expect(JSON.parse(message.toString())).toEqual({
+      eventType: "RiskAssessmentCreated",
+      userId: "user-123",
+      assessmentId: "assessment-123",
+      riskLevel: "MODERATE",
+      riskScore: 6,
+      latitude: "51.507400",
+      longitude: "-0.127800",
+      createdAt: "2026-09-05T10:00:00.000Z",
+    });
+
+    expect(options).toEqual({
+      persistent: true,
+      contentType: "application/json",
     });
   });
 
